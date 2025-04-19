@@ -20,7 +20,7 @@ jobs = {
 }
 
 # App title
-st.title("SkillMatch – JobRight Style Resume Analyzer")
+st.title("SkillMatch – Resume Analyzer")
 
 # Upload section
 st.subheader("Upload Resume File (.pdf or .txt)")
