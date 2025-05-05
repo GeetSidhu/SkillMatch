@@ -1,4 +1,4 @@
-# SkillMatch Advanced App with PDF Summary, AI Feedback, User Skills, and Role Tips
+# SkillMatch Advanced App with PDF Summary, AI Feedback, and Role Tips
 import streamlit as st
 import fitz  # PyMuPDF
 import pandas as pd
@@ -64,11 +64,6 @@ if uploaded_file is not None:
     st.subheader("📝 Resume Preview")
     st.text_area("Below is the extracted text:", value=resume_text[:3000], height=200)
 
-# --- Add Manual Skills ---
-st.subheader("➕ Add Skills Not in Resume (optional)")
-manual_input = st.text_input("Comma-separated skills (e.g., Power BI, Canva)")
-manual_skills = [s.strip().lower() for s in manual_input.split(",") if s] if manual_input else []
-
 # --- Category Selection ---
 st.subheader("🎯 Choose Job Category")
 selected_category = st.selectbox("Select a category:", list(job_categories.keys()))
@@ -80,7 +75,7 @@ if resume_text and st.button("🔍 Analyze My Resume"):
     all_missing_skills = []
     all_matched_skills = []
 
-    full_text = resume_text + " " + " ".join(manual_skills)
+    full_text = resume_text
 
     for job, skills in jobs.items():
         matched = [skill for skill in skills if skill.lower() in full_text]
@@ -172,35 +167,14 @@ if resume_text and st.button("🔍 Analyze My Resume"):
         recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
     )
     output = BytesIO()
-    pdf.output(output)
+    pdf.output(name=output)
+    output.seek(0)
     st.download_button(
         label="📄 Download PDF Summary",
-        data=output.getvalue(),
+        data=output.read(),
         file_name="SkillMatch_Report.pdf",
         mime="application/pdf"
     )
-
-    # --- Job Posting Recommendations ---
-    st.subheader("📌 Job Posting Recommendations")
-    try:
-        postings_df = pd.read_csv("postings_5000_clean.csv")
-        postings_df.columns = postings_df.columns.str.strip().str.title()
-        top_role = df.iloc[0]['Job']
-        matching_postings = postings_df[
-            postings_df['Job Title'].str.contains(top_role, case=False, na=False)
-        ]
-        if not matching_postings.empty:
-            st.markdown(f"**Top Job Postings for `{top_role}`:**")
-            for _, row in matching_postings.head(5).iterrows():
-                job_title = row.get('Job Title', 'N/A')
-                company = row.get('Company', 'N/A')
-                location = row.get('Location', 'N/A')
-                url = row.get('Url', '#')
-                st.markdown(f"🔹 [{job_title} at {company} – {location}]({url})")
-        else:
-            st.info(f"No job postings found for **{top_role}**.")
-    except Exception as e:
-        st.error(f"Error loading job postings: {e}")
 
 else:
     st.info("Please upload a resume and select a category to start.")
