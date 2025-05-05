@@ -11,7 +11,7 @@ from fpdf import FPDF
 # --- Logo and Title ---
 logo = Image.open("logo.png")
 st.image(logo, width=200)
-st.title("SkillMatch – Resume Analyzer (Pro Edition)")
+st.title("SkillMatch – Resume Analyzer")
 
 # --- Job Roles by Category ---
 job_categories = {
