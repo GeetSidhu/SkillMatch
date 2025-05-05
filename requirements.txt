@@ -3,3 +3,4 @@ pymupdf
 pandas
 matplotlib
 xlsxwriter
+fpdf
