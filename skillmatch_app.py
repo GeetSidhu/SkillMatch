@@ -166,12 +166,10 @@ if resume_text and st.button("🔍 Analyze My Resume"):
         missing_skills=list(set(all_missing_skills))[:5],
         recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
     )
-    output = BytesIO()
-    pdf.output(name=output)
-    output.seek(0)
+    pdf_output = pdf.output(dest='S').encode('latin-1')
     st.download_button(
         label="📄 Download PDF Summary",
-        data=output.read(),
+        data=pdf_output,
         file_name="SkillMatch_Report.pdf",
         mime="application/pdf"
     )
