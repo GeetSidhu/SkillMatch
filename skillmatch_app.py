@@ -1,4 +1,3 @@
-# SkillMatch Advanced App with PDF Summary, AI Feedback, and Role Tips
 import streamlit as st
 import fitz  # PyMuPDF
 import pandas as pd
@@ -7,6 +6,21 @@ from io import BytesIO
 from collections import Counter
 from PIL import Image
 from fpdf import FPDF
+import re
+
+# --- Extract Candidate Name Function ---
+def extract_name(text):
+    lines = text.strip().split("\n")
+    lines = [line.strip() for line in lines if line.strip()]
+    for line in lines:
+        if 1 <= len(line.split()) <= 4:
+            words = line.split()
+            if all(word[0].isupper() for word in words if word.isalpha()):
+                return line.title()
+    name_match = re.findall(r'\b[A-Z][a-z]+\b', text[:500])
+    if len(name_match) >= 2:
+        return f"{name_match[0]} {name_match[1]}"
+    return "Candidate"
 
 # --- Logo and Title ---
 logo = Image.open("logo.png")
@@ -56,10 +70,10 @@ resume_text = ""
 
 if uploaded_file is not None:
     if uploaded_file.type == "text/plain":
-        resume_text = uploaded_file.read().decode("utf-8").lower()
+        resume_text = uploaded_file.read().decode("utf-8")
     elif uploaded_file.type == "application/pdf":
         with fitz.open(stream=uploaded_file.read(), filetype="pdf") as pdf_file:
-            resume_text = " ".join([page.get_text() for page in pdf_file]).lower()
+            resume_text = " ".join([page.get_text() for page in pdf_file])
 
     st.subheader("📝 Resume Preview")
     st.text_area("Below is the extracted text:", value=resume_text[:3000], height=200)
@@ -75,7 +89,7 @@ if resume_text and st.button("🔍 Analyze My Resume"):
     all_missing_skills = []
     all_matched_skills = []
 
-    full_text = resume_text
+    full_text = resume_text.lower()
 
     for job, skills in jobs.items():
         matched = [skill for skill in skills if skill.lower() in full_text]
@@ -157,10 +171,13 @@ if resume_text and st.button("🔍 Analyze My Resume"):
             for tip in recommendations:
                 self.multi_cell(0, 10, f"- {tip}")
 
+    extracted_name = extract_name(resume_text)
+    st.write(f"👤 Detected Name: {extracted_name}")  # Optional: show on screen
+
     pdf = SkillMatchPDF()
     pdf.add_page()
     pdf.add_summary(
-        name="Candidate",
+        name=extracted_name,
         score=round(avg_score, 1),
         jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
         missing_skills=list(set(all_missing_skills))[:5],
