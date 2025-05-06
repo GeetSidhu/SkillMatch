@@ -11,7 +11,7 @@ from fpdf import FPDF
 # --- Logo and Title ---
 logo = Image.open("logo.png")
 st.image(logo, width=200)
-st.title("SkillMatch – Resume Analyzer")
+st.title("SkillMatch – Resume Analyzer (Pro Edition)")
 
 # --- Job Roles by Category ---
 job_categories = {
@@ -156,19 +156,23 @@ if resume_text and st.button("🔍 Analyze My Resume"):
             self.set_font("Arial", '', 12)
             for tip in recommendations:
                 self.multi_cell(0, 10, f"- {tip}")
-pdf = SkillMatchPDF()
-pdf.add_page()
-pdf.add_summary(
-    name="Candidate",
-    score=round(avg_score, 1),
-    jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
-    missing_skills=list(set(all_missing_skills))[:5],
-    recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
-)
-    pdf_output = pdf.output(dest='S').encode('latin-1')
+
+    pdf = SkillMatchPDF()
+    pdf.add_page()
+    pdf.add_summary(
+        name="Candidate",
+        score=round(avg_score, 1),
+        jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
+        missing_skills=list(set(all_missing_skills))[:5],
+        recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
+    )
+    output = BytesIO()
+    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+    output.write(pdf_bytes)
+    output.seek(0)
     st.download_button(
         label="📄 Download PDF Summary",
-        data=pdf_output,
+        data=output.read(),
         file_name="SkillMatch_Report.pdf",
         mime="application/pdf"
     )
