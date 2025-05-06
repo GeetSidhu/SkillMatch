@@ -156,7 +156,6 @@ if resume_text and st.button("🔍 Analyze My Resume"):
             self.set_font("Arial", '', 12)
             for tip in recommendations:
                 self.multi_cell(0, 10, f"- {tip}")
-
 pdf = SkillMatchPDF()
 pdf.add_page()
 pdf.add_summary(
