@@ -157,13 +157,10 @@ if resume_text and st.button("🔍 Analyze My Resume"):
             for tip in recommendations:
                 self.multi_cell(0, 10, f"- {tip}")
 
- extracted_name = extract_name(resume_text)
-
-# 👇 Then generate the PDF with real name
 pdf = SkillMatchPDF()
 pdf.add_page()
 pdf.add_summary(
-    name=extracted_name,
+    name="Candidate",
     score=round(avg_score, 1),
     jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
     missing_skills=list(set(all_missing_skills))[:5],
