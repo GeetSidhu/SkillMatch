@@ -3,6 +3,7 @@ import fitz  # PyMuPDF
 import pandas as pd
 import altair as alt
 from io import BytesIO
+from collections import Counter
 from PIL import Image
 from fpdf import FPDF
 import re
@@ -105,11 +106,9 @@ if resume_text and st.button("🔍 Analyze My Resume"):
         })
 
     df = pd.DataFrame(match_data).sort_values(by="Match %", ascending=False)
+    avg_score = df["Match %"].mean()
 
-    # ✅ Use Best Match as Resume Score
-    best_score = df["Match %"].max()
-
-    st.subheader(f"📈 Resume Score: {best_score:.1f}%")
+    st.subheader(f"📈 Resume Score: {avg_score:.1f}%")
     st.dataframe(df)
 
     st.subheader("💬 Career Assistant Feedback")
@@ -117,22 +116,17 @@ if resume_text and st.button("🔍 Analyze My Resume"):
     st.markdown(f"**Best Match:** {top_job['Job']} ({top_job['Match %']}%)")
     st.info(f"✅ Tip: {top_job['Role Tips']}")
 
-    if best_score >= 80:
+    if avg_score >= 80:
         st.success("Great match! You're well-prepared for most roles.")
-    elif best_score >= 60:
+    elif avg_score >= 60:
         st.warning("Decent fit. You can boost your match by improving missing skills.")
     else:
         st.error("Low match. Add more relevant skills or project work to your resume.")
 
-    # ✅ Show All Missing Skills With Course Links (No Limit)
     st.subheader("📚 Recommended Courses")
-    shown_any = False
-    for skill in sorted(set(all_missing_skills)):
+    for skill in list(set(all_missing_skills))[:5]:
         if skill in course_links:
             st.markdown(f"- [{skill.title()}]({course_links[skill]})")
-            shown_any = True
-    if not shown_any:
-        st.info("🎉 No missing skills found with linked courses!")
 
     st.subheader("📊 Match Score Chart")
     chart = alt.Chart(df).mark_bar().encode(
@@ -178,14 +172,16 @@ if resume_text and st.button("🔍 Analyze My Resume"):
                 self.multi_cell(0, 10, f"- {tip}")
 
     extracted_name = extract_name(resume_text)
+    st.write(f"👤 Detected Name: {extracted_name}")  # Optional: show on screen
+
     pdf = SkillMatchPDF()
     pdf.add_page()
     pdf.add_summary(
         name=extracted_name,
-        score=round(best_score, 1),
+        score=round(avg_score, 1),
         jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
-        missing_skills=list(set(all_missing_skills)),
-        recommendations=[f"Learn {s}" for s in list(set(all_missing_skills)) if s in course_links]
+        missing_skills=list(set(all_missing_skills))[:5],
+        recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
     )
     output = BytesIO()
     pdf_bytes = pdf.output(dest='S').encode('latin-1')
@@ -196,3 +192,7 @@ if resume_text and st.button("🔍 Analyze My Resume"):
         data=output.read(),
         file_name="SkillMatch_Report.pdf",
         mime="application/pdf"
+    )
+
+else:
+    st.info("Please upload a resume and select a category to start.")
