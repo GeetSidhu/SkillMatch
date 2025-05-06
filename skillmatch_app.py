@@ -157,15 +157,18 @@ if resume_text and st.button("🔍 Analyze My Resume"):
             for tip in recommendations:
                 self.multi_cell(0, 10, f"- {tip}")
 
-    pdf = SkillMatchPDF()
-    pdf.add_page()
-    pdf.add_summary(
-        name="Candidate",
-        score=round(avg_score, 1),
-        jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
-        missing_skills=list(set(all_missing_skills))[:5],
-        recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
-    )
+ extracted_name = extract_name(resume_text)
+
+# 👇 Then generate the PDF with real name
+pdf = SkillMatchPDF()
+pdf.add_page()
+pdf.add_summary(
+    name=extracted_name,
+    score=round(avg_score, 1),
+    jobs=[f"{row['Job']} ({row['Match %']}%)" for _, row in df.head(3).iterrows()],
+    missing_skills=list(set(all_missing_skills))[:5],
+    recommendations=[f"Learn {s}" for s in list(set(all_missing_skills))[:5]]
+)
     pdf_output = pdf.output(dest='S').encode('latin-1')
     st.download_button(
         label="📄 Download PDF Summary",
